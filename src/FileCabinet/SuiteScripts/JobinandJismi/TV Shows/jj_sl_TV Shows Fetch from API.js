@@ -1,42 +1,41 @@
 /**
- * @NApiVersion 2.1
- * @NScriptType Suitelet
- */
-define(['N/ui/serverWidget', 'N/url', 'N/redirect', 'N/https'],
-    /**
- * @param{serverWidget} serverWidget
- */
-    (serverWidget, url, redirect, https) => {
-        /**
-         * Defines the Suitelet script trigger point.
-         * @param {Object} scriptContext
-         * @param {ServerRequest} scriptContext.request - Incoming request
-         * @param {ServerResponse} scriptContext.response - Suitelet response
-         * @since 2015.2
-         */
+* @NApiVersion 2.1
+* @NScriptType Suitelet
+*/
+define(['N/ui/serverWidget', 'N/https'],
+    (serverWidget, https) => {
+ 
         const onRequest = (scriptContext) => {
-            try{
-                if(scriptContext.request.method === 'GET'){
+            try {
+                if (scriptContext.request.method === 'GET') {
                     let form = serverWidget.createForm({
                         title: 'Find TV Shows'
                     });
                     let group1 = form.addFieldGroup({
                         id: 'custpage_searchbar',
                         label: 'Search Bar'
-                    })
+                    });
                     let find = form.addField({
                         id: 'custpage_showname',
                         label: 'Enter a TV Show name',
                         type: serverWidget.FieldType.TEXT,
                         container: 'custpage_searchbar'
                     });
+                    let showName = scriptContext.request.parameters.show;
+                    if (showName) {
+                        find.defaultValue = showName;
+                    }
+                    form.addButton({
+                        id: 'custpage_search',
+                        label: 'Search',
+                        functionName: 'searchTVShow'
+                    });
                     let subList = form.addSublist({
                         id: 'custpage_sublist1',
                         label: 'Related Shows',
                         type: serverWidget.SublistType.STATICLIST,
                         container: 'custpage_searchbar'
-                    })
-    
+                    });
                     subList.addField({
                         id: 'custpage_name',
                         label: 'Name',
@@ -55,20 +54,14 @@ define(['N/ui/serverWidget', 'N/url', 'N/redirect', 'N/https'],
                     subList.addField({
                         id: 'custpage_url',
                         label: 'URL',
-                        type: serverWidget.FieldType.TEXT
+                        type: serverWidget.FieldType.URL
                     });
-                    let submit = form.addSubmitButton({
-                        label: 'Search Shows'
-                    });
-                    if(scriptContext.request.parameters.show) {
-                        let showName = scriptContext.request.parameters.show;
-                        // API Call to fetch TV shows based on the search query
-                        let apiUrl = 'https://api.tvmaze.com/search/shows?q=' + encodeURIComponent(showName);
+                    if (showName) {
+                        let apiUrl = 'https://api.tvmaze.com/search/shows?q={' + encodeURIComponent(showName) + '}';
+                        log.debug("apiUrl",apiUrl)
                         let response = https.get({
                             url: apiUrl
                         });
-                        log.debug('URL response', response);
-        
                         if (response.code === 200) {
                             let shows = JSON.parse(response.body);
                             for (let i = 0; i < shows.length; i++) {
@@ -95,29 +88,19 @@ define(['N/ui/serverWidget', 'N/url', 'N/redirect', 'N/https'],
                             }
                         }
                     }
+ 
                     scriptContext.response.writePage(form);
-                }
-                else if(scriptContext.request.method === 'POST'){
+                    form.clientScriptModulePath = './jj_cs_Set URL Parameter for TV show.js';
+ 
+                } else if (scriptContext.request.method === 'POST') {
                     let name = scriptContext.request.parameters.custpage_showname;
                     log.debug('Search Keyword', name);
-                    // let redirectUrl = url.resolveScript({
-                    //     scriptId: 'customscript_jj_sl_tv_shows_api',
-                    //     deploymentId: 'customdeploy_jj_sl_tv_shows_api',
-                    //     params: { show: name }
-                    // });
-                    scriptContext.response.sendRedirect({
-                        type: https.RedirectType.SUITELET,
-                        identifier: 'customscript_jj_sl_tv_shows_api',
-                        deploymentId: 'customdeploy_jj_sl_tv_shows_api',
-                        parameters: { show: name }
-                    });
                 }
-            }
-            catch(e){
+            } catch (e) {
                 log.debug('Error@onRequest', e.message + e.stack);
             }
-        }
-
-        return {onRequest}
-
+        };
+ 
+        return { onRequest };
+ 
     });

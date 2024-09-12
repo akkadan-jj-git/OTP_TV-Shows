@@ -1,0 +1,10 @@
+<clientscript scriptid="customscript_jj_cs_set_tv_show_url_value">
+  <description></description>
+  <isinactive>F</isinactive>
+  <name>JJ CS Set TV Show url Value</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/JobinandJismi/TV Shows/jj_cs_Set URL Parameter for TV show.js]</scriptfile>
+</clientscript>
